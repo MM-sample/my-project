@@ -35,7 +35,7 @@ services:
             - container-link
         init: true
         volumes:
-            - ./source:$PROJECT_PATH:delegated
+            - ../src/Nexus:$PROJECT_PATH:delegated
             - PHP-FPM-SOCK:/var/run/php-fpm
             - $PHP_INI_PATH/php.ini:$SYS_PHP_CONF_PATH/php/php.ini:delegated
             - $PHP_FPM_CONF_PATH/php-fpm.conf:$SYS_PHP_CONF_PATH/php-fpm.conf:delegated
@@ -46,30 +46,11 @@ services:
             TZ: $TIME_ZONE
             LANG: $LANG
             CACHE_HOST: cache1
-#        expose:
-#            - '9000'
         entrypoint: "/bin/sh -c 'chmod -R o+w ${PROJECT_PATH} && docker-php-entrypoint php-fpm'"
         extra_hosts:
             - "host.docker.internal:host-gateway"
         depends_on:
-            - redis
-    redis:
-        build:
-            context: ./dockerfiles/redis/.
-            args:
-                - REDIS_VERSION=${REDIS_VERSION}
-        container_name: redis-container
-        init: true
-        volumes:
-            - $REDIS_CONF_FILE:$SYS_REDIS_CONF_PATH:delegated
-        environment:
-            TZ: $TIME_ZONE
-            LANG: $LANG
-        networks:
-            - container-link
-        expose:
-            - '6379'
-        command: ['redis-server', $SYS_REDIS_CONF_PATH]
+            - mysql
     mysql:
         build:
             context: ./dockerfiles/mysql/.

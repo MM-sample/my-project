@@ -65,15 +65,27 @@ services:
             - $DB_INIT_PATH:/docker-entrypoint-initdb.d:delegated,z
             - $SYS_LOG_PATH/mysql:$SYS_LOG_PATH/mysql:z
             - MYSQL-DATA:/var/lib/mysql:cached
-        expose:
-            - "3306"
         ports:
-            - "3306:3306"
+            - 3306:3306
         environment:
             MYSQL_ROOT_PASSWORD: $ENV_MYSQL_ROOT_PASSWORD
             MYSQL_USER: $ENV_MYSQL_USER
             MYSQL_PASSWORD: $ENV_MYSQL_PASSWORD
             TZ: $TIME_ZONE
+    dockhand:
+        image: fnsys/dockhand:latest
+        container_name: dockhand-container
+        init: true
+        restart: unless-stopped
+        networks:
+            - container-link
+        ports:
+            - 3000:3000
+        environment:
+            TZ: $TIME_ZONE
+        volumes:
+            # Dockerの制御に必須：ホストのDockerソケットをマウント
+            - /var/run/docker.sock:/var/run/docker.sock
 volumes:
     PHP-FPM-SOCK:
     MYSQL-DATA:

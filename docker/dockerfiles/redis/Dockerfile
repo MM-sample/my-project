@@ -1,4 +1,0 @@
-ARG REDIS_VERSION
-
-FROM redis:${REDIS_VERSION}
-RUN apt-get update

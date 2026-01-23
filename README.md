@@ -49,6 +49,7 @@ cd docker
 
 # 2. 環境の構築・起動
 docker compose up -d
+```
 
 3. Access
 Application: http://localhost

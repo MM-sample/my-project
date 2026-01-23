@@ -21,6 +21,7 @@ Nexus Core は、フルスタックフレームワークの「ブラックボッ
 Nexus Core の性能を支えるため、コンテナレイヤーにはモダンな運用・監視ツールを統合しています。
 
 ### Stack Details
+
 ・Web: Nginx 1.26
 ・App: PHP 8.4-FPM (Optimized for Nexus Core)
 ・DB: MySQL 8.2 (With Slow Query Log automation)
@@ -34,6 +35,7 @@ Nexus Core の性能を支えるため、コンテナレイヤーにはモダン
 ・Metrics: コンテナごとのリソース消費（CPU/Memory）をグラフ監視。
 
 ### Setup Guide
+
 1. Requirements
 ・Docker / Docker Compose
 ・.env ファイル（提供済みの変数定義に基づく）
@@ -43,9 +45,11 @@ Nexus Core の性能を支えるため、コンテナレイヤーにはモダン
 cd docker
 
 # 2. 環境の構築・起動
+
 docker compose up -d
 
 3. Access
+
 ・Application: http://XXXXX
 ・Admin Dashboard (Dockhand): http://XXXXX:3000
 

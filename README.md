@@ -51,16 +51,15 @@ cd docker
 docker compose up -d
 ```
 
-3. Access
-Application: http://localhost
+### 3. Access
+* Application: http://localhost
+* Admin Dashboard (Dockhand): http://localhost:3000
 
-Admin Dashboard (Dockhand): http://localhost:3000
-
-💡 Design Philosophy (なぜこれを作ったか)
+## 💡 Design Philosophy (なぜこれを作ったか)
 現代のPHP開発において、Laravel等のフルスタックフレームワークは非常に強力ですが、一方で「内部で何が起きているか」をブラックボックス化させがちです。 本プロジェクトでは、以下の3点を証明するためにフルスクラッチでの実装を選択しました。
 
-Framework Agnostic 特定のフレームワークに依存せず、PHPの本質的な機能を使いこなす設計能力。
+* Framework Agnostic 特定のフレームワークに依存せず、PHPの本質的な機能を使いこなす設計能力。
 
-Performance First マジックメソッドやReflectionを適切にキャッシュし、オーバーヘッドを最小限に抑える実装力。
+* Performance First マジックメソッドやReflectionを適切にキャッシュし、オーバーヘッドを最小限に抑える実装力。
 
-Reliability 不整合を許さないトランザクション設計など、エンタープライズ用途で必須となる堅牢性の追求。
+* Reliability 不整合を許さないトランザクション設計など、エンタープライズ用途で必須となる堅牢性の追求。

@@ -1,0 +1,3 @@
+# 2026年1月現在の安定版を指定
+ARG DOCKHAND_VERSION
+FROM fnsys/dockhand:${DOCKHAND_VERSION}

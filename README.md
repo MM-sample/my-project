@@ -1,24 +1,59 @@
+
 「Nexus Core は、PHP 8.2+ のポテンシャルを最大限に引き出すために設計された
 軽量・高速な基盤アーキテクチャです。
 トランザクションのスタック管理や、アトミックなバルク操作など、
 実務で求められる『堅牢性』と『パフォーマンス』を、最小限の記述で実現します。」
 
-### Key Features
-Advanced DI Engine: Reflectionを活用し、コンストラクタベースの依存性注入を自動化。
+### Architecture & Key Features
+Nexus Core は、フルスタックフレームワークの「ブラックボックス化」を排し、PHPの本質的な機能を制御下に置くことを目的としています。
 
-Hierarchical Configuration: ドットシンタックスによる多階層設定への高速アクセスと、環境変数（.env）の動的キャッシュ。
+・Advanced DI Engine: Reflectionを活用し、コンストラクタベースの依存性注入を自動化。
 
-Smart SQL Builder: カラム定義に基づいた Bulk Insert / Upsert の自動生成、およびインクリメント制御。
+・Hierarchical Configuration: ドットシンタックスによる多階層設定への高速アクセスと、環境変数（.env）の動的キャッシュ。
 
-Transaction Stack Manager: ネストされたトランザクションの境界を自動制御し、複雑な業務ロジックの整合性を担保。
+・Smart SQL Builder: カラム定義に基づいた Bulk Insert / Upsert の自動生成、およびインクリメント制御。
 
-Flexible Env Handling: 実行環境（Prod/Local）に応じた php.ini の動的書き換えと最適化。
+・Transaction Stack Manager: ネストされたトランザクションの境界を自動制御し、複雑な業務ロジックの整合性を担保。
+
+・Flexible Env Handling: 実行環境（Prod/Local）に応じた php.ini の動的書き換えと最適化。
+
+### Infrastructure Stack (Docker Compose)
+Nexus Core の性能を支えるため、コンテナレイヤーにはモダンな運用・監視ツールを統合しています。
+
+### Stack Details
+・Web: Nginx 1.26
+・App: PHP 8.4-FPM (Optimized for Nexus Core)
+・DB: MySQL 8.2 (With Slow Query Log automation)
+・Management: Dockhand (Unified GUI for container orchestration)
+
+### Observability with Dockhand
+開発時のデバッグ効率を最大化するため、Dockhand を通じた可視化を標準搭載しています。
+
+・Real-time Logs: Nginx/PHP-FPM の標準出力をブラウザ上で即座に確認。
+・File Browser: MySQLのスロークエリログや PHP エラーログへの直接アクセス。
+・Metrics: コンテナごとのリソース消費（CPU/Memory）をグラフ監視。
+
+### Setup Guide
+1. Requirements
+・Docker / Docker Compose
+・.env ファイル（提供済みの変数定義に基づく）
+
+2. Quick Start
+# 1. dockerディレクトリへ移動
+cd docker
+
+# 2. 環境の構築・起動
+docker compose up -d
+
+3. Access
+・Application: http://XXXXX
+・Admin Dashboard (Dockhand): http://XXXXX:3000
 
 ### Design Philosophy (なぜこれを作ったか)
 現代のPHP開発において、Laravel等のフルスタックフレームワークは非常に強力ですが、一方で「内部で何が起きているか」をブラックボックス化させがちです。 本プロジェクトでは、以下の3点を証明するためにフルスクラッチでの実装を選択しました。
 
-Framework Agnostic: 特定のフレームワークに依存せず、PHPの本質的な機能を使いこなす設計能力。
+・Framework Agnostic: 特定のフレームワークに依存せず、PHPの本質的な機能を使いこなす設計能力。
 
-Performance First: マジックメソッドやReflectionを適切にキャッシュし、オーバーヘッドを最小限に抑える実装力。
+・Performance First: マジックメソッドやReflectionを適切にキャッシュし、オーバーヘッドを最小限に抑える実装力。
 
-Reliability: 不整合を許さないトランザクション設計など、エンタープライズ用途で必須となる堅牢性の追求。
+・Reliability: 不整合を許さないトランザクション設計など、エンタープライズ用途で必須となる堅牢性の追求。

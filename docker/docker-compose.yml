@@ -17,12 +17,12 @@ services:
             - $NGINX_CONF_PATH/nginx.conf:$SYS_NGINX_PATH/nginx.conf:cached,z
             - $NGINX_CONFD_PATH/default.conf:$SYS_NGINX_PATH/conf.d/default.conf:cached,z
             - $SYS_LOG_PATH/nginx:$SYS_LOG_PATH/nginx:cached,z
-            - ./source:$PROJECT_PATH:delegated,z
+            - $SOURCE_PATH:$PROJECT_PATH:delegated,z
         environment:
             TZ: $TIME_ZONE
             LANG: $LANG
         ports:
-            - '80:80'
+            - 80:80
         depends_on:
             - php-fpm
     php-fpm:
@@ -35,7 +35,7 @@ services:
             - container-link
         init: true
         volumes:
-            - ../src/Nexus:$PROJECT_PATH:delegated
+            - $SOURCE_PATH:$PROJECT_PATH:delegated
             - PHP-FPM-SOCK:/var/run/php-fpm
             - $PHP_INI_PATH/php.ini:$SYS_PHP_CONF_PATH/php/php.ini:delegated
             - $PHP_FPM_CONF_PATH/php-fpm.conf:$SYS_PHP_CONF_PATH/php-fpm.conf:delegated
@@ -49,6 +49,13 @@ services:
         entrypoint: "/bin/sh -c 'chmod -R o+w ${PROJECT_PATH} && docker-php-entrypoint php-fpm'"
         extra_hosts:
             - "host.docker.internal:host-gateway"
+        healthcheck:
+            # ソケットファイル経由で ping を送る
+            test: ["CMD", "cgi-fcgi", "-bind", "-connect", "/var/run/php-fpm/php-fpm.sock"]
+            interval: 10s
+            timeout: 5s
+            retries: 3
+            start_period: 10s
         depends_on:
             - mysql
     mysql:
@@ -72,8 +79,18 @@ services:
             MYSQL_USER: $ENV_MYSQL_USER
             MYSQL_PASSWORD: $ENV_MYSQL_PASSWORD
             TZ: $TIME_ZONE
+        healthcheck:
+          test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$ENV_MYSQL_ROOT_PASSWORD"]
+          interval: 10s
+          timeout: 5s
+          retries: 5
+          start_period: 30s
     dockhand:
-        image: fnsys/dockhand:latest
+        build:
+            context: ./dockerfiles/dockhand/.
+            args:
+                - DOCKHAND_VERSION=${DOCKHAND_VERSION}
+                - APP_DATA_PATH=${APP_DATA_PATH}
         container_name: dockhand-container
         init: true
         restart: unless-stopped
@@ -83,12 +100,16 @@ services:
             - 3000:3000
         environment:
             TZ: $TIME_ZONE
+            # これを追記することで、内部的にローカルソケットへの接続準備
+            -DOCKHAND_AUTO_CONNECT_LOCAL: true
         volumes:
             # Dockerの制御に必須：ホストのDockerソケットをマウント
-            - /var/run/docker.sock:/var/run/docker.sock
+            - ${DOCKER_SOCK_PATH}:${DOCKER_SOCK_PATH}
+            - DOCKHAND-DATA:${APP_DATA_PATH}
 volumes:
     PHP-FPM-SOCK:
     MYSQL-DATA:
+    DOCKHAND-DATA:
 networks:
     # コンテナ間通信用のネットワークセグメント
     container-link:

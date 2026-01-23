@@ -66,6 +66,6 @@ try {
     echo "Message: " . $ex->getMessage() . "\n";
     echo "File: " . $ex->getFile() . " (Line: " . $ex->getLine() . ")\n";
     // 詳細なスタックトレースが必要な場合は追加
-    // var_dump($ex->getTraceAsString());
+     var_dump($ex->__toString());
     exit;
 }

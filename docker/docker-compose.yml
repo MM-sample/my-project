@@ -16,7 +16,7 @@ services:
                 nocopy: true
             - $NGINX_CONF_PATH/nginx.conf:$SYS_NGINX_PATH/nginx.conf:cached,z
             - $NGINX_CONFD_PATH/default.conf:$SYS_NGINX_PATH/conf.d/default.conf:cached,z
-            - $SYS_LOG_PATH/nginx:$SYS_LOG_PATH/nginx:cached,z
+            - $NGINX_LOG_PATH:${SYS_LOG_PATH}/nginx:cached,z
             - $SOURCE_PATH:$PROJECT_PATH:delegated,z
         environment:
             TZ: $TIME_ZONE
@@ -41,7 +41,7 @@ services:
             - $PHP_FPM_CONF_PATH/php-fpm.conf:$SYS_PHP_CONF_PATH/php-fpm.conf:delegated
             - $PHP_FPM_CONFD_PATH/www.conf:$SYS_PHP_CONF_PATH/php-fpm.d/www.conf:delegated
             - $PHP_FPM_CONFD_PATH/zzz-docker.conf:$SYS_PHP_CONF_PATH/php-fpm.d/zzz-docker.conf:delegated
-            - $SYS_LOG_PATH/php-fpm:/usr/local/var/log/php-fpm:cached
+            - $PHP_FPM_LOG_PATH:${SYS_LOG_PATH}/php-fpm:cached
         environment:
             TZ: $TIME_ZONE
             LANG: $LANG
@@ -100,12 +100,14 @@ services:
             - 3000:3000
         environment:
             TZ: $TIME_ZONE
+            DOCKHAND_AUTO_CONNECT_LOCAL: "true"
             # これを追記することで、内部的にローカルソケットへの接続準備
-            -DOCKHAND_AUTO_CONNECT_LOCAL: true
         volumes:
             # Dockerの制御に必須：ホストのDockerソケットをマウント
             - ${DOCKER_SOCK_PATH}:${DOCKER_SOCK_PATH}
             - DOCKHAND-DATA:${APP_DATA_PATH}
+            - $NGINX_LOG_PATH:${APP_DATA_PATH}/nginx-logs:ro
+            - $PHP_FPM_LOG_PATH:${APP_DATA_PATH}/php-fpm:ro
 volumes:
     PHP-FPM-SOCK:
     MYSQL-DATA:

@@ -1,0 +1,118 @@
+services:
+    nginx:
+        build:
+            context: ./dockerfiles/nginx/.
+            args:
+                - NGINX_VERSION=${NGINX_VERSION}
+                - PROJECT_PATH=${PROJECT_PATH}
+        container_name: nginx-container
+        networks:
+            - container-link
+        volumes:
+            - type: volume
+              source: PHP-FPM-SOCK
+              target: /var/run/php-fpm
+              volume:
+                nocopy: true
+            - $NGINX_CONF_PATH/nginx.conf:$SYS_NGINX_PATH/nginx.conf:cached,z
+            - $NGINX_CONFD_PATH/default.conf:$SYS_NGINX_PATH/conf.d/default.conf:cached,z
+            - $NGINX_LOG_PATH:${SYS_LOG_PATH}/nginx:cached,z
+            - $SOURCE_PATH:$PROJECT_PATH:delegated,z
+        environment:
+            TZ: $TIME_ZONE
+            LANG: $LANG
+        ports:
+            - 80:80
+        depends_on:
+            - php-fpm
+    php-fpm:
+        build:
+            context: ./dockerfiles/php-fpm/.
+            args:
+                - PHP_FPM_VERSION=${PHP_FPM_VERSION}
+                - PROJECT_PATH=${PROJECT_PATH}
+        networks:
+            - container-link
+        init: true
+        volumes:
+            - $SOURCE_PATH:$PROJECT_PATH:delegated
+            - PHP-FPM-SOCK:/var/run/php-fpm
+            - $PHP_INI_PATH/php.ini:$SYS_PHP_CONF_PATH/php/php.ini:delegated
+            - $PHP_FPM_CONF_PATH/php-fpm.conf:$SYS_PHP_CONF_PATH/php-fpm.conf:delegated
+            - $PHP_FPM_CONFD_PATH/www.conf:$SYS_PHP_CONF_PATH/php-fpm.d/www.conf:delegated
+            - $PHP_FPM_CONFD_PATH/zzz-docker.conf:$SYS_PHP_CONF_PATH/php-fpm.d/zzz-docker.conf:delegated
+            - $PHP_FPM_LOG_PATH:${SYS_LOG_PATH}/php-fpm:cached
+        environment:
+            TZ: $TIME_ZONE
+            LANG: $LANG
+            CACHE_HOST: cache1
+        entrypoint: "/bin/sh -c 'chmod -R o+w ${PROJECT_PATH} && docker-php-entrypoint php-fpm'"
+        extra_hosts:
+            - "host.docker.internal:host-gateway"
+        healthcheck:
+            # ソケットファイル経由で ping を送る
+            test: ["CMD", "cgi-fcgi", "-bind", "-connect", "/var/run/php-fpm/php-fpm.sock"]
+            interval: 10s
+            timeout: 5s
+            retries: 3
+            start_period: 10s
+        depends_on:
+            - mysql
+    mysql:
+        build:
+            context: ./dockerfiles/mysql/.
+            args:
+                - MYSQL_VERSION=${MYSQL_VERSION}
+        container_name: mysql-container
+        init: true
+        networks:
+            - container-link
+        volumes:
+            - $MYSQL_CONF_PATH/my.cnf:$SYS_ROOT_PATH/my.cnf:delegated,z
+            - $DB_INIT_PATH:/docker-entrypoint-initdb.d:delegated,z
+            - $SYS_LOG_PATH/mysql:$SYS_LOG_PATH/mysql:z
+            - MYSQL-DATA:/var/lib/mysql:cached
+        ports:
+            - 3306:3306
+        environment:
+            MYSQL_ROOT_PASSWORD: $ENV_MYSQL_ROOT_PASSWORD
+            MYSQL_USER: $ENV_MYSQL_USER
+            MYSQL_PASSWORD: $ENV_MYSQL_PASSWORD
+            TZ: $TIME_ZONE
+        healthcheck:
+          test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$ENV_MYSQL_ROOT_PASSWORD"]
+          interval: 10s
+          timeout: 5s
+          retries: 5
+          start_period: 30s
+    dockhand:
+        build:
+            context: ./dockerfiles/dockhand/.
+            args:
+                - DOCKHAND_VERSION=${DOCKHAND_VERSION}
+                - APP_DATA_PATH=${APP_DATA_PATH}
+        container_name: dockhand-container
+        init: true
+        restart: unless-stopped
+        networks:
+            - container-link
+        ports:
+            - 3000:3000
+        environment:
+            TZ: $TIME_ZONE
+            DOCKHAND_AUTO_CONNECT_LOCAL: "true"
+            # これを追記することで、内部的にローカルソケットへの接続準備
+        volumes:
+            # Dockerの制御に必須：ホストのDockerソケットをマウント
+            - ${DOCKER_SOCK_PATH}:${DOCKER_SOCK_PATH}
+            - DOCKHAND-DATA:${APP_DATA_PATH}
+            - $NGINX_LOG_PATH:${APP_DATA_PATH}/nginx-logs:ro
+            - $PHP_FPM_LOG_PATH:${APP_DATA_PATH}/php-fpm:ro
+volumes:
+    PHP-FPM-SOCK:
+    MYSQL-DATA:
+    DOCKHAND-DATA:
+networks:
+    # コンテナ間通信用のネットワークセグメント
+    container-link:
+        name: mynetwork.internal
